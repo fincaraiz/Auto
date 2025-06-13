@@ -35,6 +35,7 @@ dist/
 build/
 out/
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 # Playwright
@@ -44,3 +45,5 @@ playwright-report/
 /blob-report/
 playwright/.cache/
 /playwright/.cache/
+=======
+>>>>>>> 8d6b471 (Initial commit)

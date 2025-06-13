@@ -7,8 +7,15 @@
     "test:ui": "playwright test --ui"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@playwright/test": "^1.53.0",
     "@types/node": "^20.11.24"
   }
 }
 
+=======
+    "@playwright/test": "^1.42.1",
+    "@types/node": "^20.11.24"
+  }
+}
+>>>>>>> 8d6b471 (Initial commit)
