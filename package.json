@@ -1,0 +1,14 @@
+{
+  "name": "fincaraiz-ui-testing",
+  "version": "1.0.0",
+  "description": "UI testing for FincaRaíz website",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "@types/node": "^20.11.24"
+  }
+}
+
