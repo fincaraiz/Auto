@@ -6,6 +6,7 @@ yarn.lock
 # Playwright
 test-results/
 playwright-report/
+blob-report/
 playwright/.cache/
 
 # Environment variables
@@ -34,16 +35,3 @@ yarn-error.log*
 dist/
 build/
 out/
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-# Playwright
-test-results/
-playwright-report/
-/playwright-report/
-/blob-report/
-playwright/.cache/
-/playwright/.cache/
-=======
->>>>>>> 8d6b471 (Initial commit)

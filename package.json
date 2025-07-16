@@ -1,21 +1,28 @@
 {
-  "name": "fincaraiz-ui-testing",
+  "name": "finca",
   "version": "1.0.0",
-  "description": "UI testing for FincaRaíz website",
+  "description": "",
+  "main": "index.js",
   "scripts": {
     "test": "playwright test",
     "test:ui": "playwright test --ui"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JohnRios809/finca.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JohnRios809/finca/issues"
+  },
+  "homepage": "https://github.com/JohnRios809/finca#readme",
   "devDependencies": {
-<<<<<<< HEAD
-    "@playwright/test": "^1.53.0",
-    "@types/node": "^20.11.24"
+    "@playwright/test": "^1.53.2",
+    "@types/node": "^24.0.10"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
   }
 }
-
-=======
-    "@playwright/test": "^1.42.1",
-    "@types/node": "^20.11.24"
-  }
-}
->>>>>>> 8d6b471 (Initial commit)
