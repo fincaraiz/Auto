@@ -222,8 +222,7 @@ test.describe('FincaRaiz E2E', () => {
     await page1.locator('xpath=/html/body/div[10]/div[3]/div/div[2]/button[2]').click();
 
     // Validación final (ajusta según el mensaje o estado esperado)
-    // await expect(page1.locator('text=Publicación guardada')).toBeVisible();
+    
   });
 
-  // Puedes agregar más tests aquí relacionados con FincaRaiz
-});
+ });
