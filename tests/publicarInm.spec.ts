@@ -185,8 +185,9 @@ test.describe('FincaRaiz E2E', () => {
     
     // URLs de tus imágenes en GitHub (raw)
     const imagenesGitHub = [
-      'https://raw.githubusercontent.com/usuario/repositorio/rama/imagenes/avivir_1.jpg',
-      'https://raw.githubusercontent.com/usuario/repositorio/rama/imagenes/render-montecielo2.jpg'
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/avivir_1.jpg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/recanto-render-noviembre-2020_1.jpg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/render-montecielo2.jpg'
     ];
 
     // Carpeta temporal local
