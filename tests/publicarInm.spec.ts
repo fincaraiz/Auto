@@ -3,13 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 
-const URL = 'https://www.fincaraiz.com.co/';
-const EMAIL = 'soporteciudades.fincaraiz@gmail.com';
-const PASSWORD = 'Finca2025';
+const URL = 'https://infofinca.frcol.io/';
+const EMAIL = 'ginasambony91@gmail.com';
+const PASSWORD = 'infocasas';
 
 // Utilidad para login condicional
 async function ensureLoggedIn(page) {
-  // Cambia el selector por uno que solo exista si ya estás logueado
+  // Verifica si el usuario ya está logueado
   const loggedIn = await page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/span').isVisible().catch(() => false);
   if (!loggedIn) {
     await page.getByRole('button', { name: 'Ingresar' }).click();
@@ -19,6 +19,8 @@ async function ensureLoggedIn(page) {
     await expect(page.getByRole('textbox', { name: 'Contraseña' })).toBeVisible();
     await page.getByRole('textbox', { name: 'Contraseña' }).fill(PASSWORD);
     await page.getByRole('button', { name: 'Enviar' }).click();
+    // Espera explícita a que el usuario esté logueado antes de continuar
+    await expect(page.locator('//*[@id="__next"]/div/header/div[1]/div[1]')).toBeVisible({ timeout: 20000 });
   }
 }
 
@@ -40,10 +42,9 @@ test.describe('FincaRaiz E2E', () => {
     test.setTimeout(120000); // 2 minutos
     // Login solo si es necesario
     await ensureLoggedIn(page);
-
     // Hacer clic en el localizador solicitado después del login
-    await expect(page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/span')).toBeVisible();
-    await page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/span').click();
+    await expect(page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]')).toBeVisible();
+    await page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]').click();
 
     // Oficina Virtual (nueva pestaña)
     const [page1] = await Promise.all([
@@ -52,7 +53,7 @@ test.describe('FincaRaiz E2E', () => {
     ]);
 
     // Hacer clic en el elemento del sidebar solicitado
-    await page1.locator('span:nth-child(2) > ._sidebar-item_9sv68_189').click();
+    await page1.locator('//*[@id="sidebar"]/nav/ul/span[2]').click();
 
     // Espera a que cargue el formulario
     await expect(page1.getByRole('textbox', { name: 'Dirección / punto referencia*' })).toBeVisible();
@@ -108,7 +109,7 @@ test.describe('FincaRaiz E2E', () => {
 
     // --- Habitaciones ---
     // Cambia el número 3 para seleccionar la cantidad de habitaciones deseada
-    await incrementarPorIndice(page1, 0, 3); // 3 habitaciones
+    await incrementarPorIndice(page1, 0, 1); // 3 habitaciones
 
     // --- Baños ---
     // Cambia el número 2 para seleccionar la cantidad de baños deseada
@@ -129,8 +130,7 @@ test.describe('FincaRaiz E2E', () => {
     await descripcionTextarea.fill('Ejemplo automatización');
     const codeBrokerInput = page1.locator('input#undefined-field');
     await expect(codeBrokerInput).toBeVisible();
-    await codeBrokerInput.click();
-    await codeBrokerInput.fill('Ejemplo automatización');
+       
 
     // --- Características adicionales ---
     await expect(page1.getByText('Loft')).toBeVisible();
@@ -174,13 +174,12 @@ test.describe('FincaRaiz E2E', () => {
     await expect(page1.getByText('Trans. Público cercano')).toBeVisible();
     await page1.getByText('Trans. Público cercano').click();
 
-    // --- Selección de Agente ---
+    // --- Selección de Agente --- se debe ajustar el texto del agente según el correo electrónico real
     const agenteBtn = page1.getByRole('button', { name: 'Agente 1* Seleccionar' });
     await expect(agenteBtn).toBeVisible();
     await agenteBtn.click();
-    const agenteOpcion = page1.getByText(/agente1@fincaraiz.com.co$/);
-    await expect(agenteOpcion).toBeVisible();
-    await agenteOpcion.click();
+    // Selección de agente por id
+    await page1.locator('//*[@id="downshift-8-menu"]/li').click();
 
     
     // URLs de tus imágenes en GitHub (raw)
@@ -219,10 +218,16 @@ test.describe('FincaRaiz E2E', () => {
     await expect(confirmarBtn).toBeEnabled();
     await confirmarBtn.click();
     // Clic adicional requerido
-    await page1.locator('xpath=/html/body/div[10]/div[3]/div/div[2]/button[2]').click();
-
+    await page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]').click();
+const botonConfirmacion = page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]');
+await expect(botonConfirmacion).toBeVisible({ timeout: 10000 });
+await expect(botonConfirmacion).toBeEnabled();
+await botonConfirmacion.click();
     // Validación final (ajusta según el mensaje o estado esperado)
-    
+     // Esperar después de subir las imágenes
+    await page1.waitForTimeout(100000);
+    // await expect(page1.locator('text=Publicación guardada')).toBeVisible();
   });
 
- });
+  
+});
