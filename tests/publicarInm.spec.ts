@@ -164,8 +164,6 @@ test.describe('FincaRaiz E2E', () => {
     await descripcionTextarea.fill('Ejemplo automatización');
     const codeBrokerInput = page1.locator('input#undefined-field');
     await expect(codeBrokerInput).toBeVisible({ timeout: 10000 });
-    await codeBrokerInput.click();
-    await codeBrokerInput.fill('Ejemplo automatización');
 
     // --- Características adicionales ---
     await expect(page1.getByText('Loft')).toBeVisible();
