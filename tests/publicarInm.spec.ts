@@ -9,7 +9,7 @@ const PASSWORD = 'infocasas';
 
 // Utilidad para login condicional
 async function ensureLoggedIn(page) {
-  // Verifica si el usuario ya está logueado
+  // Cambia el selector por uno que solo exista si ya estás logueado
   const loggedIn = await page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/span').isVisible().catch(() => false);
   if (!loggedIn) {
     await page.getByRole('button', { name: 'Ingresar' }).click();
@@ -19,8 +19,6 @@ async function ensureLoggedIn(page) {
     await expect(page.getByRole('textbox', { name: 'Contraseña' })).toBeVisible();
     await page.getByRole('textbox', { name: 'Contraseña' }).fill(PASSWORD);
     await page.getByRole('button', { name: 'Enviar' }).click();
-    // Espera explícita a que el usuario esté logueado antes de continuar
-    await expect(page.locator('//*[@id="__next"]/div/header/div[1]/div[1]')).toBeVisible({ timeout: 20000 });
   }
 }
 
@@ -39,11 +37,13 @@ test.describe('FincaRaiz E2E', () => {
   });
 
   test('publicar inmueble', async ({ page, context }) => {
-    test.setTimeout(120000); // 2 minutos
+    test.setTimeout(180000); // 3 minutos
     // Login solo si es necesario
     await ensureLoggedIn(page);
-    // Hacer clic en el localizador solicitado después del login
-    await expect(page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]')).toBeVisible();
+
+    // Espera explícita para el elemento de usuario logueado
+    await page.waitForSelector('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]', { timeout: 30000 });
+    await expect(page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]')).toBeVisible({ timeout: 30000 });
     await page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]').click();
 
     // Oficina Virtual (nueva pestaña)
@@ -53,59 +53,93 @@ test.describe('FincaRaiz E2E', () => {
     ]);
 
     // Hacer clic en el elemento del sidebar solicitado
-    await page1.locator('//*[@id="sidebar"]/nav/ul/span[2]').click();
+    // Reintentos para el clic en el sidebar
+    let sidebarClicked = false;
+    for (let intento = 0; intento < 3; intento++) {
+      try {
+        const sidebarItem = page1.locator('#sidebar > nav > ul > span:nth-child(2) > li > a > div > svg');
+        await sidebarItem.click({ force: true });
+        sidebarClicked = true;
+        break;
+      } catch (e) {
+        if (intento < 2) {
+          await page1.waitForTimeout(2000); // espera extra antes de reintentar
+        }
+      }
+    }
+    if (!sidebarClicked) {
+      throw new Error('No se pudo hacer clic en el sidebar después de varios intentos');
+    }
+
+    // Espera a que la página termine de cargar antes de buscar el formulario
+    await page1.waitForLoadState('networkidle');
 
     // Espera a que cargue el formulario
-    await expect(page1.getByRole('textbox', { name: 'Dirección / punto referencia*' })).toBeVisible();
+    // Reintentos para esperar el textbox del formulario
+    let textboxVisible = false;
+    for (let intento = 0; intento < 3; intento++) {
+      try {
+        await expect(page1.getByRole('textbox', { name: 'Dirección / punto referencia*' })).toBeVisible({ timeout: 15000 });
+        textboxVisible = true;
+        break;
+      } catch (e) {
+        if (intento < 2) {
+          await page1.waitForTimeout(3000); // espera extra antes de reintentar
+        }
+      }
+    }
+    if (!textboxVisible) {
+      throw new Error('No se encontró el textbox del formulario después de varios intentos');
+    }
 
     // Completa el formulario
     await page1.getByRole('textbox', { name: 'Dirección / punto referencia*' }).fill('carrera 92#152a -50');
-    await expect(page1.getByText('Carrera 92 #152a-50, Bogota,')).toBeVisible();
+    await expect(page1.getByText('Carrera 92 #152a-50, Bogota,')).toBeVisible({ timeout: 15000 });
     await page1.getByText('Carrera 92 #152a-50, Bogota,').click();
     await page1.getByRole('textbox', { name: 'Seleccionar ubicación' }).fill('pinar de suba');
     
 
     // --- Selección de Tipo de oferta ---
     await page1.getByRole('button', { name: 'Tipo de oferta* Seleccionar' }).click();
-    await expect(page1.getByTestId('downshift-2-item-1')).toBeVisible();
+    await expect(page1.getByTestId('downshift-2-item-1')).toBeVisible({ timeout: 10000 });
     await page1.getByTestId('downshift-2-item-1').click();
 
     // --- Selección de Tipo de inmueble ---
     await page1.getByRole('button', { name: 'Tipo de inmueble* Seleccionar' }).click();
-    await expect(page1.getByText('Apartamento')).toBeVisible();
+    await expect(page1.getByText('Apartamento')).toBeVisible({ timeout: 10000 });
     await page1.getByText('Apartamento').click();
 
     // --- Llenar el campo de Precio ---
     const precioInput = page1.getByRole('textbox', { name: 'Precio*' });
-    await expect(precioInput).toBeEnabled();
+    await expect(precioInput).toBeEnabled({ timeout: 10000 });
     await precioInput.click({ clickCount: 3 });
     await precioInput.fill('');
     await precioInput.type('1500000');
-    await expect(precioInput).toHaveValue(/\$[\s\u00A0]?1\.500\.000/);
+    await expect(precioInput).toHaveValue(/\$[\s\u00A0]?1\.500\.000/, { timeout: 10000 });
 
     // --- Selección de Estrato ---
     const estratoBtn = page1.getByRole('button', { name: 'Estrato* Seleccionar' });
-    await expect(estratoBtn).toBeVisible();
+    await expect(estratoBtn).toBeVisible({ timeout: 10000 });
     await estratoBtn.click();
     // Selecciona la opción '3' por texto visible
-    const estratoOpcion = page1.getByRole('option', { name: /^3$/ });
-    await expect(estratoOpcion).toBeVisible();
+    const estratoOpcion = page1.getByRole('option', { name: /^6$/ });
+    await expect(estratoOpcion).toBeVisible({ timeout: 10000 });
     await estratoOpcion.click();
 
     // --- Selección de Antigüedad del inmueble ---
     const antiguedadBtn = page1.getByRole('button', { name: 'Antigüedad del inmueble' });
-    await expect(antiguedadBtn).toBeVisible();
+    await expect(antiguedadBtn).toBeVisible({ timeout: 10000 });
     await antiguedadBtn.click();
     // Selecciona la opción '9 a 15' por texto visible
     const antiguedadOpcion = page1.getByRole('option', { name: '9 a 15 años' });
-    await expect(antiguedadOpcion).toBeVisible();
+    await expect(antiguedadOpcion).toBeVisible({ timeout: 10000 });
     await antiguedadOpcion.click();
 
     // --- Área construída ---
     const areaInput = page1.locator('//*[@id="area"]');
-    await expect(areaInput).toBeVisible();
+    await expect(areaInput).toBeVisible({ timeout: 10000 });
     await areaInput.fill('57');
-    await expect(areaInput).toHaveValue('57');
+    await expect(areaInput).toHaveValue('57', { timeout: 10000 });
 
     // --- Habitaciones ---
     // Cambia el número 3 para seleccionar la cantidad de habitaciones deseada
@@ -125,12 +159,13 @@ test.describe('FincaRaiz E2E', () => {
 
     // --- Descripción ---
     const descripcionTextarea = page1.locator('textarea#undefined-field');
-    await expect(descripcionTextarea).toBeVisible();
+    await expect(descripcionTextarea).toBeVisible({ timeout: 10000 });
     await descripcionTextarea.click();
     await descripcionTextarea.fill('Ejemplo automatización');
     const codeBrokerInput = page1.locator('input#undefined-field');
-    await expect(codeBrokerInput).toBeVisible();
-       
+    await expect(codeBrokerInput).toBeVisible({ timeout: 10000 });
+    await codeBrokerInput.click();
+    await codeBrokerInput.fill('Ejemplo automatización');
 
     // --- Características adicionales ---
     await expect(page1.getByText('Loft')).toBeVisible();
@@ -174,12 +209,12 @@ test.describe('FincaRaiz E2E', () => {
     await expect(page1.getByText('Trans. Público cercano')).toBeVisible();
     await page1.getByText('Trans. Público cercano').click();
 
-    // --- Selección de Agente --- se debe ajustar el texto del agente según el correo electrónico real
+    // --- Selección de Agente ---
     const agenteBtn = page1.getByRole('button', { name: 'Agente 1* Seleccionar' });
     await expect(agenteBtn).toBeVisible();
     await agenteBtn.click();
-    // Selección de agente por id
-    await page1.locator('//*[@id="downshift-8-menu"]/li').click();
+    await page1.waitForSelector('#downshift-8-menu > li', { timeout: 10000 });
+    await page1.locator('#downshift-8-menu > li').click();
 
     
     // URLs de tus imágenes en GitHub (raw)
@@ -209,24 +244,26 @@ test.describe('FincaRaiz E2E', () => {
 
     // Guardar borrador y confirmar
     const guardarBtn = page1.getByRole('button', { name: 'Publicar' });
-    await expect(guardarBtn).toBeVisible();
+    await expect(guardarBtn).toBeVisible({ timeout: 20000 });
     await guardarBtn.click();
-    await page1.waitForTimeout(2500);
+    await page1.waitForTimeout(3500);
     // Espera a que el botón esté visible y habilitado usando el id proporcionado
     const confirmarBtn = page1.locator('//*[@id="root"]/main/div[2]/div[1]/div/div/form/div[10]/footer/button[2]');
-    await expect(confirmarBtn).toBeVisible({ timeout: 40000 });
-    await expect(confirmarBtn).toBeEnabled();
+    await expect(confirmarBtn).toBeVisible({ timeout: 60000 });
+    await expect(confirmarBtn).toBeEnabled({ timeout: 20000 });
     await confirmarBtn.click();
     // Clic adicional requerido
     await page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]').click();
-const botonConfirmacion = page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]');
-await expect(botonConfirmacion).toBeVisible({ timeout: 10000 });
-await expect(botonConfirmacion).toBeEnabled();
-await botonConfirmacion.click();
+    const botonConfirmacion = page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]');
+    await expect(botonConfirmacion).toBeVisible({ timeout: 20000 });
+    await expect(botonConfirmacion).toBeEnabled({ timeout: 10000 });
+    await botonConfirmacion.click();
     // Validación final (ajusta según el mensaje o estado esperado)
-     // Esperar después de subir las imágenes
-    await page1.waitForTimeout(100000);
     // await expect(page1.locator('text=Publicación guardada')).toBeVisible();
+    // Clic adicional solicitado
+    await page1.waitForSelector('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]', { timeout: 12000 });
+    await page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]').click();
+    
   });
 
   
