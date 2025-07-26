@@ -42,9 +42,9 @@ test.describe('FincaRaiz E2E', () => {
     await ensureLoggedIn(page);
 
     // Espera explícita para el elemento de usuario logueado
-    await page.waitForSelector('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]', { timeout: 30000 });
-    await expect(page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]')).toBeVisible({ timeout: 30000 });
-    await page.locator('//*[@id="__next"]/div/header/div[1]/div[1]/div[1]').click();
+    await page.waitForSelector('.btn-secondary.btn-user .icon-user svg', { timeout: 30000 });
+    await expect(page.locator('.btn-secondary.btn-user .icon-user svg')).toBeVisible({ timeout: 30000 });
+    await page.locator('.btn-secondary.btn-user .icon-user svg').click();
 
     // Oficina Virtual (nueva pestaña)
     const [page1] = await Promise.all([
@@ -99,10 +99,12 @@ test.describe('FincaRaiz E2E', () => {
     await page1.getByRole('textbox', { name: 'Seleccionar ubicación' }).fill('pinar de suba');
     
 
-    // --- Selección de Tipo de oferta ---
-    await page1.getByRole('button', { name: 'Tipo de oferta* Seleccionar' }).click();
-    await expect(page1.getByTestId('downshift-2-item-1')).toBeVisible({ timeout: 10000 });
-    await page1.getByTestId('downshift-2-item-1').click();
+        await page1.getByRole('button', { name: 'Tipo de oferta* Seleccionar' }).click();
+    await page1.waitForTimeout(1000); // Espera 1 segundo para que se abra el menú
+    const ventaOpcion = page1.getByText('Arriendo').first();
+    await expect(ventaOpcion).toBeVisible({ timeout: 10000 });
+    await ventaOpcion.click();
+
 
     // --- Selección de Tipo de inmueble ---
     await page1.getByRole('button', { name: 'Tipo de inmueble* Seleccionar' }).click();
@@ -164,7 +166,7 @@ test.describe('FincaRaiz E2E', () => {
     await descripcionTextarea.fill('Ejemplo automatización');
     const codeBrokerInput = page1.locator('input#undefined-field');
     await expect(codeBrokerInput).toBeVisible({ timeout: 10000 });
-
+   
     // --- Características adicionales ---
     await expect(page1.getByText('Loft')).toBeVisible();
     await page1.getByText('Loft').click();
@@ -211,16 +213,32 @@ test.describe('FincaRaiz E2E', () => {
     const agenteBtn = page1.getByRole('button', { name: 'Agente 1* Seleccionar' });
     await expect(agenteBtn).toBeVisible();
     await agenteBtn.click();
-    await page1.waitForSelector('#downshift-8-menu > li', { timeout: 10000 });
-    await page1.locator('#downshift-8-menu > li').click();
+    await page1.locator('li span.MuiTypography-body:has-text("ginasambony91@gmail.com")').waitFor({ timeout: 10000 });
+    await page1.locator('li span.MuiTypography-body:has-text("ginasambony91@gmail.com")').click();
 
     
     // URLs de tus imágenes en GitHub (raw)
     const imagenesGitHub = [
       'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/avivir_1.jpg',
       'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/recanto-render-noviembre-2020_1.jpg',
-      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/render-montecielo2.jpg'
-    ];
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/render-montecielo2.jpg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/armarios.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/baño.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/iimagenes/bañoSocial.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/cama.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/ducha.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/escaleras.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/estudio.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/hab.jpg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/lavadora.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/nevera.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/parqueadero.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/patio.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/sala-cocina.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/sala1.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/sillon.jpeg',
+      'https://raw.githubusercontent.com/fincaraiz/Auto/main/imagenes/sofa.jpeg',
+    ];    
 
     // Carpeta temporal local
     const carpetaTemporal = path.join(__dirname, 'imagenes_temp');
@@ -240,29 +258,26 @@ test.describe('FincaRaiz E2E', () => {
     // Sube las imágenes (ajusta el selector si es necesario)
     await page1.setInputFiles('input[type="file"]', imageFiles);
 
-    // Guardar borrador y confirmar
-    const guardarBtn = page1.getByRole('button', { name: 'Publicar' });
-    await expect(guardarBtn).toBeVisible({ timeout: 20000 });
-    await guardarBtn.click();
-    await page1.waitForTimeout(3500);
-    // Espera a que el botón esté visible y habilitado usando el id proporcionado
-    const confirmarBtn = page1.locator('//*[@id="root"]/main/div[2]/div[1]/div/div/form/div[10]/footer/button[2]');
-    await expect(confirmarBtn).toBeVisible({ timeout: 60000 });
-    await expect(confirmarBtn).toBeEnabled({ timeout: 20000 });
-    await confirmarBtn.click();
-    // Clic adicional requerido
-    await page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]').click();
-    const botonConfirmacion = page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]');
-    await expect(botonConfirmacion).toBeVisible({ timeout: 20000 });
-    await expect(botonConfirmacion).toBeEnabled({ timeout: 10000 });
-    await botonConfirmacion.click();
-    // Validación final (ajusta según el mensaje o estado esperado)
-    // await expect(page1.locator('text=Publicación guardada')).toBeVisible();
-    // Clic adicional solicitado
-    await page1.waitForSelector('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]', { timeout: 12000 });
-    await page1.locator('xpath=/html/body/div[5]/div[3]/div/div[2]/button[2]').click();
+/// Publicar inmueble primer clic
+const publicarBtn = page1.locator('button[data-icon="false"][type="button"][tabindex="0"]:text("Publicar")');
+await expect(publicarBtn).toBeVisible({ timeout: 20000 });
+await publicarBtn.click();
+await page1.waitForTimeout(3500);
+await page1.getByRole('button', { name: 'Publicar' }).click();
+
+// Espera a que el botón "Publicar" esté visible y habilitado
+const publicBtn = page1.locator('button[data-analytics-id="publish"]');
+await expect(publicBtn).toBeVisible({ timeout: 6000 });
+await expect(publicBtn).toBeEnabled({ timeout: 2000 });
+await publicBtn.click(); // Hacer clic en el botón "Publicar"
+
+// Espera de la publicación
+await page1.waitForTimeout(60000);
+//cierra la pagina de publicación
+await page1.close();
+ 
+});
     
   });
 
-  
-});
+
